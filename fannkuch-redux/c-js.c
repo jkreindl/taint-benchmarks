@@ -19,7 +19,8 @@ int *(*createArray)();
 int (*getElement)(void *, int);
 void (*setElement)(void *, int, int);
 
-void setup(void *arg) {
+void setup(void *arg)
+{
   max = polyglot_eval(
       "js",
       "(function max(a, b) { if (a > b) { return a; } else { return b; } })");
@@ -30,7 +31,8 @@ void setup(void *arg) {
       "js", "(function setElement(arr, i, value) { arr[i] = value; })");
 }
 
-int fannkuchredux(int n) {
+int fannkuchredux(int n)
+{
   int *perm = createArray();
   int *perm1 = createArray();
   int *count = createArray();
@@ -48,8 +50,10 @@ int fannkuchredux(int n) {
 
   int r = n;
 
-  while (1) {
-    while (r != 1) {
+  while (1)
+  {
+    while (r != 1)
+    {
       setElement(count, r - 1, r);
       r -= 1;
     }
@@ -59,9 +63,11 @@ int fannkuchredux(int n) {
     int flipsCount = __truffletaint_add_int(0);
     int k;
 
-    while (!((k = getElement(perm, 0)) == 0)) {
+    while (!((k = getElement(perm, 0)) == 0))
+    {
       int k2 = (k + 1) >> 1;
-      for (i = 0; i < k2; i++) {
+      for (i = 0; i < k2; i++)
+      {
         int temp = getElement(perm, i);
         setElement(perm, i, getElement(perm, k - i));
         setElement(perm, k - i, temp);
@@ -77,8 +83,10 @@ int fannkuchredux(int n) {
       __truffletaint_assert_int(checksum);
 
     /* Use incremental change to generate another permutation */
-    while (1) {
-      if (r == n) {
+    while (1)
+    {
+      if (r == n)
+      {
         for (int idx = 0; idx < n; idx += 3)
           __truffletaint_assert_int(getElement(perm1, idx));
         for (int idx = 1; idx < n; idx += 3)
@@ -91,7 +99,8 @@ int fannkuchredux(int n) {
 
       int perm0 = getElement(perm1, 0);
       i = 0;
-      while (i < r) {
+      while (i < r)
+      {
         int j = i + 1;
         setElement(perm1, i, getElement(perm1, j));
         i = j;
@@ -106,7 +115,8 @@ int fannkuchredux(int n) {
   }
 }
 
-int benchmark() {
+int benchmark()
+{
   int result = fannkuchredux(10);
   return result;
 }

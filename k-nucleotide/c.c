@@ -8,6 +8,7 @@
 
 #define BENCHMARK_NAME "k-nucleotide"
 #define BENCHMARK_RESULT_TYPE 1
+#define NATIVE_INPUT_FILE "knucleotide-input-250000.fasta"
 #include "../common.h"
 
 void *ioObj;
@@ -35,7 +36,8 @@ KHASH_INIT(oligonucleotide, uint64_t, uint32_t, 1, CUSTOM_HASH_FUNCTION,
 // intptr_t should be the native integer type on most sane systems.
 typedef intptr_t intnative_t;
 
-typedef struct {
+typedef struct
+{
   uint64_t key;
   uint32_t value;
 } element;
@@ -54,7 +56,8 @@ typedef struct {
 // larger values will come first and in cases of identical values then elements
 // with smaller keys will come first.
 static int element_Compare(const element *const left_Element,
-                           const element *const right_Element) {
+                           const element *const right_Element)
+{
 
   // Sort based on element values.
   if (left_Element->value < right_Element->value)
@@ -71,7 +74,8 @@ static int element_Compare(const element *const left_Element,
 // desired_Length_For_Oligonucleotides and then save it to output.
 static void generate_Frequencies_For_Desired_Length_Oligonucleotides(
     const char *const polynucleotide, const intnative_t polynucleotide_Length,
-    const intnative_t desired_Length_For_Oligonucleotides, char *const output) {
+    const intnative_t desired_Length_For_Oligonucleotides, char *const output)
+{
 
   khash_t(oligonucleotide) *hash_Table = kh_init(oligonucleotide);
 
@@ -88,7 +92,8 @@ static void generate_Frequencies_For_Desired_Length_Oligonucleotides(
   // desired_Length_For_Oligonucleotides to hash_Table and update the count
   // for each oligonucleotide.
   for (intnative_t i = desired_Length_For_Oligonucleotides - 1;
-       i < polynucleotide_Length; i++) {
+       i < polynucleotide_Length; i++)
+  {
 
     key = (key << 2 & mask) | polynucleotide[i];
 
@@ -118,11 +123,13 @@ static void generate_Frequencies_For_Desired_Length_Oligonucleotides(
         (int (*)(const void *, const void *))element_Compare);
 
   // Print the frequencies for each oligonucleotide.
-  for (intnative_t output_Position = 0, i = 0; i < elements_Array_Size; i++) {
+  for (intnative_t output_Position = 0, i = 0; i < elements_Array_Size; i++)
+  {
 
     // Convert the key for the oligonucleotide to a string.
     char oligonucleotide[desired_Length_For_Oligonucleotides + 1];
-    for (intnative_t j = desired_Length_For_Oligonucleotides - 1; j > -1; j--) {
+    for (intnative_t j = desired_Length_For_Oligonucleotides - 1; j > -1; j--)
+    {
       oligonucleotide[j] = nucleotide_For_Code(elements_Array[i].key);
       elements_Array[i].key >>= 2;
     }
@@ -154,7 +161,8 @@ static void generate_Frequencies_For_Desired_Length_Oligonucleotides(
 // polynucleotide and then save it to output.
 static void generate_Count_For_Oligonucleotide(
     const char *const polynucleotide, const intnative_t polynucleotide_Length,
-    const char *const oligonucleotide, char *const output) {
+    const char *const oligonucleotide, char *const output)
+{
   const intnative_t oligonucleotide_Length = strlen(oligonucleotide);
 
   khash_t(oligonucleotide) *const hash_Table = kh_init(oligonucleotide);
@@ -170,7 +178,8 @@ static void generate_Count_For_Oligonucleotide(
   // Add all the complete oligonucleotides of oligonucleotide_Length to
   // hash_Table and update the count for each oligonucleotide.
   for (intnative_t i = oligonucleotide_Length - 1; i < polynucleotide_Length;
-       i++) {
+       i++)
+  {
 
     key = (key << 2 & mask) | polynucleotide[i];
 
@@ -181,7 +190,7 @@ static void generate_Count_For_Oligonucleotide(
     // If the element_Was_Unused, then initialize the count to 1, otherwise
     // increment the count.
     if (element_Was_Unused)
-      kh_value(hash_Table, k) = 1;
+      kh_value(hash_Table, k) = __truffletaint_add_int(1);
     else
       kh_value(hash_Table, k)++;
   }
@@ -203,16 +212,19 @@ static void generate_Count_For_Oligonucleotide(
 
 #define INPUT_BUFFER_SIZE 4096
 
-static inline int skipFirstTwoPolynucleotides(char *buffer) {
+static inline int skipFirstTwoPolynucleotides(char *buffer)
+{
   uint64_t bytesRead;
-  do {
+  do
+  {
     void *tmp;
     BENCHMARK_IO_READ_LINE_CONST_BUFFER(ioObj, tmp, buffer, INPUT_BUFFER_SIZE,
                                         bytesRead);
   } while (bytesRead && memcmp(">THREE", buffer, sizeof(">THREE") - 1));
 }
 
-static inline int readNextLineOfPolynucleotideIntoBuffer(char *buffer) {
+static inline int readNextLineOfPolynucleotideIntoBuffer(char *buffer)
+{
   uint64_t bytesRead;
   void *tmp;
   BENCHMARK_IO_READ_LINE_CONST_BUFFER(ioObj, tmp, buffer, INPUT_BUFFER_SIZE,
@@ -220,7 +232,8 @@ static inline int readNextLineOfPolynucleotideIntoBuffer(char *buffer) {
   return bytesRead && buffer[0] != '>';
 }
 
-void knucleotide() {
+void knucleotide()
+{
   BENCHMARK_IO_OPEN_INPUT_FILE(ioObj);
 
   char buffer[INPUT_BUFFER_SIZE];
@@ -235,7 +248,8 @@ void knucleotide() {
   char *polynucleotide = malloc(polynucleotide_Capacity);
 
   // Start reading and encoding the third polynucleotide.
-  while (readNextLineOfPolynucleotideIntoBuffer(buffer)) {
+  while (readNextLineOfPolynucleotideIntoBuffer(buffer))
+  {
     for (intnative_t i = 0; buffer[i] != '\0'; i++)
       if (buffer[i] != '\n')
         polynucleotide[polynucleotide_Length++] =
@@ -278,7 +292,8 @@ void knucleotide() {
   BENCHMARK_IO_OPEN_OUTPUT_FILE(ioObj);
 
   // Output the results to stdout.
-  for (intnative_t i = 0; i < 7; i++) {
+  for (intnative_t i = 0; i < 7; i++)
+  {
     BENCHMARK_IO_WRITE(ioObj, output_Buffer[i], strlen(output_Buffer[i]));
     BENCHMARK_IO_WRITE_CHAR(ioObj, '\n');
   }
@@ -288,7 +303,8 @@ void knucleotide() {
   free(polynucleotide);
 }
 
-int benchmark() {
+int benchmark()
+{
   knucleotide();
   return 0;
 }

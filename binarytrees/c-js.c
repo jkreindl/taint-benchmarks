@@ -24,7 +24,8 @@
 struct tn;
 typedef struct tn treeNode;
 
-struct tn {
+struct tn
+{
   treeNode *left;
   treeNode *right;
   unsigned item;
@@ -36,7 +37,7 @@ const char *JS_CODE_GET_ITEM =
     "(\n"
     "function getItem(level) {\n"
     "    if ((level & 0b11) == 0b11) {"
-    "        var tainted = Taint.addTaint(1);\n"
+    "        var tainted = Taint.add(1);\n"
     "        return tainted;\n"
     "    } else {\n"
     "        return 1;\n"
@@ -46,7 +47,8 @@ const char *JS_CODE_GET_ITEM =
 
 unsigned (*getItem)(unsigned level);
 
-treeNode *NewTreeNode(unsigned level, treeNode *left, treeNode *right) {
+treeNode *NewTreeNode(unsigned level, treeNode *left, treeNode *right)
+{
   treeNode *new;
 
   new = (treeNode *)malloc(sizeof(treeNode));
@@ -58,42 +60,51 @@ treeNode *NewTreeNode(unsigned level, treeNode *left, treeNode *right) {
   return new;
 } /* NewTreeNode() */
 
-long ItemCheck(treeNode *tree) {
+long ItemCheck(treeNode *tree)
+{
   long result = 0L;
   result += tree->item;
-  if (tree->left != NULL) {
+  if (tree->left != NULL)
+  {
     result += ItemCheck(tree->left);
     result += ItemCheck(tree->right);
   }
   return result;
 } /* ItemCheck() */
 
-treeNode *BottomUpTree(unsigned depth) {
+treeNode *BottomUpTree(unsigned depth)
+{
   if (depth > 0)
     return NewTreeNode(depth, BottomUpTree(depth - 1), BottomUpTree(depth - 1));
   else
     return NewTreeNode(depth, NULL, NULL);
 } /* BottomUpTree() */
 
-void DeleteTree(unsigned depth, treeNode *tree) {
-  if (tree->left != NULL) {
+void DeleteTree(unsigned depth, treeNode *tree)
+{
+  if (tree->left != NULL)
+  {
     DeleteTree(depth - 1, tree->left);
     DeleteTree(depth - 1, tree->right);
   }
 
   unsigned item = tree->item;
 
-  if (shouldBeTainted(depth)) {
+  if (shouldBeTainted(depth))
+  {
     __truffletaint_assert_unsigned_int(item);
     tree->item = 0u;
-  } else {
+  }
+  else
+  {
     __truffletaint_assertnot_unsigned_int(item);
   }
 
   free(tree);
 } /* DeleteTree() */
 
-long benchmark() {
+long benchmark()
+{
   unsigned N, depth, minDepth, maxDepth, stretchDepth;
   treeNode *stretchTree, *longLivedTree, *tempTree;
 
@@ -120,14 +131,16 @@ long benchmark() {
 
   longLivedTree = BottomUpTree(maxDepth);
 
-  for (depth = minDepth; depth <= maxDepth; depth += 2) {
+  for (depth = minDepth; depth <= maxDepth; depth += 2)
+  {
     long i, iterations;
 
     iterations = pow(2, maxDepth - depth + minDepth);
 
     check = 0;
 
-    for (i = 1; i <= iterations; i++) {
+    for (i = 1; i <= iterations; i++)
+    {
       tempTree = BottomUpTree(depth);
 
       long curCheck = ItemCheck(tempTree);

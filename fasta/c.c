@@ -13,15 +13,19 @@
 
 #include <string.h>
 
-void writeFastaHeader(const char *id, const char *desc) {
+void writeFastaHeader(const char *id, const char *desc)
+{
   // printf(">%s %s\n", id, desc);
 }
 
-void writeFasta(char *str) {
+void writeFasta(char *str)
+{
   char ch;
   int i = 0;
-  while ((ch = str[i++]) != '\0') {
-    switch (ch) {
+  while ((ch = str[i++]) != '\0')
+  {
+    switch (ch)
+    {
     case 'G':
     case 'T':
     case 'g':
@@ -45,29 +49,34 @@ void writeFasta(char *str) {
 #define IA 3877
 #define IC 29573
 
-double gen_random(double max) {
+double gen_random(double max)
+{
   static long last = 42;
   return max * (last = (last * IA + IC) % IM) / IM;
 }
 
-struct aminoacids {
+struct aminoacids
+{
   char c;
   double p;
 };
 
 /* Weighted selection from alphabet */
 
-void makeCumulative(struct aminoacids *genelist, int count) {
+void makeCumulative(struct aminoacids *genelist, int count)
+{
   double cp = 0.0;
   int i;
 
-  for (i = 0; i < count; i++) {
+  for (i = 0; i < count; i++)
+  {
     cp += genelist[i].p;
     genelist[i].p = cp;
   }
 }
 
-char selectRandom(const struct aminoacids *genelist, int count) {
+char selectRandom(const struct aminoacids *genelist, int count)
+{
   double r = gen_random(1);
   int i, lo, hi;
 
@@ -77,7 +86,8 @@ char selectRandom(const struct aminoacids *genelist, int count) {
   lo = 0;
   hi = count - 1;
 
-  while (hi > lo + 1) {
+  while (hi > lo + 1)
+  {
     i = (hi + lo) / 2;
     if (r < genelist[i].p)
       hi = i;
@@ -92,13 +102,15 @@ char selectRandom(const struct aminoacids *genelist, int count) {
 #define LINE_LENGTH (60)
 
 void makeRandomFasta(const char *id, const char *desc,
-                     const struct aminoacids *genelist, int count, int n) {
+                     const struct aminoacids *genelist, int count, int n)
+{
   int todo = n;
   int i, m;
 
   writeFastaHeader(id, desc);
 
-  for (; todo > 0; todo -= LINE_LENGTH) {
+  for (; todo > 0; todo -= LINE_LENGTH)
+  {
     char pick[LINE_LENGTH + 1];
     if (todo < LINE_LENGTH)
       m = todo;
@@ -111,7 +123,8 @@ void makeRandomFasta(const char *id, const char *desc,
   }
 }
 
-void makeRepeatFasta(const char *id, const char *desc, const char *s, int n) {
+void makeRepeatFasta(const char *id, const char *desc, const char *s, int n)
+{
   char *ss;
   int todo = n, k = 0, kn = strlen(s);
   int m;
@@ -121,13 +134,15 @@ void makeRepeatFasta(const char *id, const char *desc, const char *s, int n) {
 
   writeFastaHeader(id, desc);
 
-  for (; todo > 0; todo -= LINE_LENGTH) {
+  for (; todo > 0; todo -= LINE_LENGTH)
+  {
     if (todo < LINE_LENGTH)
       m = todo;
     else
       m = LINE_LENGTH;
 
-    while (m >= kn - k) {
+    while (m >= kn - k)
+    {
       writeFasta(s + k);
       m -= kn - k;
       k = 0;
@@ -154,7 +169,8 @@ struct aminoacids *homosapiens;
 char *alu;
 #define ALU_LENGTH ((42 * 6) + 35)
 
-void setupBaseData() {
+void setupBaseData()
+{
   homosapiens = calloc(HOMOSAPIENS_LEN, sizeof(struct aminoacids));
   homosapiens[0].c = 'a';
   homosapiens[0].p = 0.3029549426680;
@@ -205,9 +221,11 @@ void setupBaseData() {
                          "AGGCGGAGGTTGCAGTGAGCCGAGATCGCGCCACTGCACTCC"
                          "AGCCTGGGCGACAGAGCGAGACTCCGTCTCAAAAA";
   alu = calloc(ALU_LENGTH, sizeof(char));
-  for (size_t i = 0; i < ALU_LENGTH; i++) {
+  for (size_t i = 0; i < ALU_LENGTH; i++)
+  {
     const char ch = alu_init[i];
-    switch (ch) {
+    switch (ch)
+    {
     case 'G':
     case 'T':
       alu[i] = __truffletaint_add_char(ch);
@@ -220,7 +238,8 @@ void setupBaseData() {
   }
 }
 
-void destroyBaseData() {
+void destroyBaseData()
+{
   memset(homosapiens, 0, HOMOSAPIENS_LEN * sizeof(struct aminoacids));
   free(homosapiens);
   homosapiens = NULL;
@@ -234,7 +253,8 @@ void destroyBaseData() {
   alu = NULL;
 }
 
-int benchmark() {
+int benchmark()
+{
   int n = 1000000;
 
   setupBaseData();

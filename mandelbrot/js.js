@@ -12,9 +12,10 @@
    compile flags:  -O3 -ffast-math -march=pentium4 -funroll-loops
 */
 
-var benchmarkName = "mandelbrot";
+const benchmarkName = "mandelbrot";
+const Taint = Polyglot.import("taint");
 
-function LoopBodyData () {
+function LoopBodyData() {
     this.Zi = 0.0;
     this.Zr = 0.0;
     this.Ti = 0.0;
@@ -23,14 +24,14 @@ function LoopBodyData () {
     this.Cr = 0.0;
 }
 
-function doLoop (bodyData) {
+function doLoop(bodyData) {
     bodyData.Zi = 2.0 * bodyData.Zr * bodyData.Zi + bodyData.Ci;
     bodyData.Zr = bodyData.Tr - bodyData.Ti + bodyData.Cr;
     bodyData.Tr = bodyData.Zr * bodyData.Zr;
     bodyData.Ti = bodyData.Zi * bodyData.Zi;
 }
 
-function shouldDoLoop (i, bodyData, limit) {
+function shouldDoLoop(i, bodyData, limit) {
     if (i >= 50) {
         return false;
     }
@@ -42,35 +43,33 @@ function shouldDoLoop (i, bodyData, limit) {
     return true;
 }
 
-function mandelbrot (n) {
-    var w, h, bit_num = 0;
+function mandelbrot(n) {
+    var bit_num = 0;
     var byte_acc = 0;
-    var i;
-    var x, y, limit = 2.0;
+    const limit = 2.0;
 
-    w = h = n;
+    const w = n;
+    const h = n;
 
     var result = 0;
 
-    const Taint = Polyglot.import("taint");
-
-    for (y = 0; y < h; ++y) {
-        for (x = 0; x < w; ++x) {
+    for (let y = 0; y < h; ++y) {
+        for (let x = 0; x < w; ++x) {
             var bodyData = new LoopBodyData();
-            bodyData.Zi = Taint.addTaint(0.0);
+            bodyData.Zi = Taint.add(0.0);
             bodyData.Cr = (2.0 * x / w - 1.5);
             bodyData.Ci = (2.0 * y / h - 1.0);
 
-            for (i = 0; shouldDoLoop(i, bodyData, limit); ++i) {
+            for (let i = 0; shouldDoLoop(i, bodyData, limit); ++i) {
                 doLoop(bodyData);
             }
 
             byte_acc <<= 1;
             if (bodyData.Tr + bodyData.Ti <= limit * limit) {
                 byte_acc |= 0x01;
-                if (Taint.checkTainted(bodyData.Tr)) {
-                    if (Taint.checkTainted(n)) {
-                        byte_acc = Taint.addTaint(byte_acc);
+                if (Taint.check(bodyData.Tr)) {
+                    if (Taint.check(n)) {
+                        byte_acc = Taint.add(byte_acc);
                     }
                 }
             }
@@ -95,21 +94,20 @@ function mandelbrot (n) {
     return result;
 }
 
-function benchmark () {
-    const Taint = Polyglot.import("taint");
+function benchmark() {
     var sum = 0;
-    for (var i = 0; i < 10; i++) {
-        var n = 400;
+    for (let i = 0; i < 10; i++) {
+        let n = 400;
         if (i & 0x11)
-            n = Taint.addTaint(n);
+            n = Taint.add(n);
         sum += mandelbrot(n);
     }
     Taint.assertTainted(sum);
-    sum = Taint.removeTaint(sum);
+    sum = Taint.remove(sum);
     return sum;
 }
 
-function getExpectedResult () {
+function getExpectedResult() {
     // in c, byte_acc is a `char`, and
     // overflows a couple of times in the
     // benchmark, while this does not
@@ -118,7 +116,10 @@ function getExpectedResult () {
     return 20213330;
 }
 
-function setup (arg) {}
+function setup(arg) { }
+
+console.assert(typeof benchmark == 'function', "'benchmark' is not a function");
+console.assert(typeof benchmarkName == 'string', "'benchmarkName' is not defined or invalid");
 
 function main() {
     const benchmarkIO = Polyglot.import("benchmarkIO");
@@ -137,3 +138,4 @@ function main() {
 }
 
 main();
+

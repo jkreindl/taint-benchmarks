@@ -7,18 +7,18 @@
  *    a translation of the C program contributed by Mr Ledhug
  */
 
-var benchmarkName = "pidigits";
+const benchmarkName = "pidigits";
 
 const Taint = Polyglot.import("taint");
 var ioObj;
 
-function setup (arg) {
+function setup(arg) {
     ioObj = arg;
 }
 
 const chr_0 = "0".charCodeAt(0);
 
-function benchmark () {
+function benchmark() {
     const n = 2500;
 
     ioObj.openOutputFile();
@@ -32,11 +32,11 @@ function benchmark () {
         d4 = 0;
 
     // BigInt
-    let tmp1 = Taint.addTaint(0n), // mpz_init(tmp1)
-        tmp2 = Taint.addTaint(0n), // mpz_init(tmp2)
-        acc = Taint.addTaint(0n), // mpz_init_set_ui(acc, 0)
-        den = Taint.addTaint(1n), // mpz_init_set_ui(den, 1)
-        num = Taint.addTaint(1n); // mpz_init_set_ui(num, 1)
+    let tmp1 = Taint.add(0n), // mpz_init(tmp1)
+        tmp2 = Taint.add(0n), // mpz_init(tmp2)
+        acc = Taint.add(0n), // mpz_init_set_ui(acc, 0)
+        den = Taint.add(1n), // mpz_init_set_ui(den, 1)
+        num = Taint.add(1n); // mpz_init_set_ui(num, 1)
 
     while (i < n) {
         k++;
@@ -49,7 +49,7 @@ function benchmark () {
         num *= BigInt(k); // mpz_mul_ui(num, num, k)
         //#endregion inline nextTerm(k)
 
-        if (num > acc /* mpz_cmp(num, acc) > 0 */ ) continue;
+        if (num > acc /* mpz_cmp(num, acc) > 0 */) continue;
 
         //#region inline extractDigit(3);
         tmp1 = num * 3n; // mpz_mul_ui(tmp1, num, nth);
@@ -69,7 +69,7 @@ function benchmark () {
 
         if (d !== d4) continue;
 
-        ioObj.write(Math.floor(Taint.removeTaint(d) + chr_0));
+        ioObj.write(Math.floor(Taint.remove(d) + chr_0));
 
         if (++i % 10 === 0) {
             ioObj.write("\t:");
@@ -101,9 +101,12 @@ function benchmark () {
     return 0;
 }
 
-function getExpectedResult () {
+function getExpectedResult() {
     return 0;
 }
+
+console.assert(typeof benchmark == 'function', "'benchmark' is not a function");
+console.assert(typeof benchmarkName == 'string', "'benchmarkName' is not defined or invalid");
 
 function main() {
     const benchmarkIO = Polyglot.import("benchmarkIO");
@@ -122,3 +125,4 @@ function main() {
 }
 
 main();
+

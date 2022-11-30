@@ -31,19 +31,20 @@ const char *JS_CREATE_ARRAY =
 
 void *(*createJsArray)();
 
-double *createStorageArray() {
+double *createStorageArray()
+{
   void *jsArr = createJsArray();
   double *jsArrAsDoubleArr = polyglot_as_double_array(jsArr);
   return jsArrAsDoubleArr;
 }
 
-#define FOR_ALL_VARS(func)                                                     \
-  func(x);                                                                     \
-  func(y);                                                                     \
-  func(z);                                                                     \
-  func(vx);                                                                    \
-  func(vy);                                                                    \
-  func(vz);                                                                    \
+#define FOR_ALL_VARS(func) \
+  func(x);                 \
+  func(y);                 \
+  func(z);                 \
+  func(vx);                \
+  func(vy);                \
+  func(vz);                \
   func(mass);
 
 #define STORAGE_ARRAY_FIELD(arr_name) double *arr_name = NULL;
@@ -52,7 +53,8 @@ FOR_ALL_VARS(STORAGE_ARRAY_FIELD)
 
 void setup(void *arg) { createJsArray = polyglot_eval("js", JS_CREATE_ARRAY); }
 
-void init() {
+void init()
+{
   pi = 3.141592653589793;
   solar_mass = (4 * pi * pi);
   days_per_year = 365.24;
@@ -61,13 +63,13 @@ void init() {
 
   FOR_ALL_VARS(SETUP_ARR)
 
-#define INIT_BODY(body, _x, _y, _z, _vx, _vy, _vz, _mass)                      \
-  x[body] = __truffletaint_add_double(_x);                                     \
-  y[body] = __truffletaint_add_double(_y);                                     \
-  z[body] = __truffletaint_add_double(_z);                                     \
-  vx[body] = _vx * days_per_year;                                              \
-  vy[body] = _vy * days_per_year;                                              \
-  vz[body] = _vz * days_per_year;                                              \
+#define INIT_BODY(body, _x, _y, _z, _vx, _vy, _vz, _mass) \
+  x[body] = __truffletaint_add_double(_x);                \
+  y[body] = __truffletaint_add_double(_y);                \
+  z[body] = __truffletaint_add_double(_z);                \
+  vx[body] = _vx * days_per_year;                         \
+  vy[body] = _vy * days_per_year;                         \
+  vz[body] = _vz * days_per_year;                         \
   mass[body] = _mass * solar_mass;
 
   x[SUN] = y[SUN] = z[SUN] = __truffletaint_add_double(0.0);
@@ -91,8 +93,10 @@ void init() {
             5.15138902046611451e-05);
 }
 
-void tearDown() {
-  for (int i = 0; i < NBODIES; i++) {
+void tearDown()
+{
+  for (int i = 0; i < NBODIES; i++)
+  {
     x[i] = y[i] = z[i] = vx[i] = vy[i] = vz[i] = mass[i] = 0.0;
   }
 
@@ -101,12 +105,15 @@ void tearDown() {
   FOR_ALL_VARS(CLEAR_ARR)
 }
 
-void advance() {
-  for (int i = 0; i < NBODIES; ++i) {
+void advance()
+{
+  for (int i = 0; i < NBODIES; ++i)
+  {
     double x1 = x[i];
     double y1 = y[i];
     double z1 = z[i];
-    for (int j = i + 1; j < NBODIES; ++j) {
+    for (int j = i + 1; j < NBODIES; ++j)
+    {
       double dx = x1 - x[j];
       double R = dx * dx;
       double dy = y1 - y[j];
@@ -124,18 +131,22 @@ void advance() {
     }
   }
 
-  for (int i = 0; i < NBODIES; ++i) {
+  for (int i = 0; i < NBODIES; ++i)
+  {
     x[i] = x[i] + DT * vx[i];
     y[i] = y[i] + DT * vy[i];
     z[i] = z[i] + DT * vz[i];
   }
 }
 
-double energy() {
+double energy()
+{
   double e = 0.0;
-  for (int i = 0; i < NBODIES; ++i) {
+  for (int i = 0; i < NBODIES; ++i)
+  {
     e += 0.5 * mass[i] * (vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i]);
-    for (int j = i + 1; j < NBODIES; ++j) {
+    for (int j = i + 1; j < NBODIES; ++j)
+    {
       double dx = x[i] - x[j];
       double dy = y[i] - y[j];
       double dz = z[i] - z[j];
@@ -146,9 +157,11 @@ double energy() {
   return e;
 }
 
-void offset_momentum() {
+void offset_momentum()
+{
   double px = 0.0, py = 0.0, pz = 0.0;
-  for (int i = 0; i < NBODIES; ++i) {
+  for (int i = 0; i < NBODIES; ++i)
+  {
     px += vx[i] * mass[i];
     py += vy[i] * mass[i];
     pz += vz[i] * mass[i];
@@ -158,7 +171,8 @@ void offset_momentum() {
   vz[0] = -pz / solar_mass;
 }
 
-double benchmark() {
+double benchmark()
+{
   init();
   offset_momentum();
 
@@ -168,7 +182,8 @@ double benchmark() {
   double result = energy();
   result = __truffletaint_remove_double(result);
 
-  for (int i = 0; i < NBODIES; i++) {
+  for (int i = 0; i < NBODIES; i++)
+  {
     __truffletaint_assert_double(x[i]);
     __truffletaint_assert_double(y[i]);
     __truffletaint_assert_double(z[i]);

@@ -4,74 +4,74 @@
 // https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
 // Contributed by Paul Kitchin
 
-var benchmarkName = "reverse-complement";
+const benchmarkName = "reverse-complement";
 
 const Taint = Polyglot.import("taint");
 var ioObj;
 
-function setup (arg) {
+function setup(arg) {
     ioObj = arg;
 }
 
 const CHUNK_SIZE = 65526;
 const MAX_LINE_LENGTH = 60;
 
-function complement (character) {
+function complement(character) {
     switch (character) {
-    case 'A':
-    case 'a':
-        throw Taint.addTaint('T');
-    case 'C':
-    case 'c':
-        throw Taint.addTaint('G');
-    case 'G':
-    case 'g':
-        throw Taint.addTaint('C');
-    case 'T':
-    case 't':
-        return 'A';
-    case 'U':
-    case 'u':
-        return 'A';
-    case 'M':
-    case 'm':
-        return 'K';
-    case 'R':
-    case 'r':
-        return 'Y';
-    case 'W':
-    case 'w':
-        return 'W';
-    case 'S':
-    case 's':
-        throw Taint.addTaint('S');
-    case 'Y':
-    case 'y':
-        throw Taint.addTaint('R');
-    case 'K':
-    case 'k':
-        throw Taint.addTaint('M');
-    case 'V':
-    case 'v':
-        throw Taint.addTaint('B');
-    case 'H':
-    case 'h':
-        return 'D';
-    case 'D':
-    case 'd':
-        return 'H';
-    case 'B':
-    case 'b':
-        return 'V';
-    case 'N':
-    case 'n':
-        throw Taint.addTaint('N');
-    default:
-        return '\0';
+        case 'A':
+        case 'a':
+            throw Taint.add('T');
+        case 'C':
+        case 'c':
+            throw Taint.add('G');
+        case 'G':
+        case 'g':
+            throw Taint.add('C');
+        case 'T':
+        case 't':
+            return 'A';
+        case 'U':
+        case 'u':
+            return 'A';
+        case 'M':
+        case 'm':
+            return 'K';
+        case 'R':
+        case 'r':
+            return 'Y';
+        case 'W':
+        case 'w':
+            return 'W';
+        case 'S':
+        case 's':
+            throw Taint.add('S');
+        case 'Y':
+        case 'y':
+            throw Taint.add('R');
+        case 'K':
+        case 'k':
+            throw Taint.add('M');
+        case 'V':
+        case 'v':
+            throw Taint.add('B');
+        case 'H':
+        case 'h':
+            return 'D';
+        case 'D':
+        case 'd':
+            return 'H';
+        case 'B':
+        case 'b':
+            return 'V';
+        case 'N':
+        case 'n':
+            throw Taint.add('N');
+        default:
+            return '\0';
     }
 }
 
-function getComplementChar (original) {
+function getComplementChar(original) {
     var ch;
     try {
         ch = complement(original);
@@ -83,14 +83,14 @@ function getComplementChar (original) {
     return ch;
 }
 
-function chunk () {
+function chunk() {
     this.next = null;
     this.previous = null;
     this.data = [].fill('\0', 0, CHUNK_SIZE);
     this.length = 0;
 }
 
-function compute_reverse_complement (begin, end) {
+function compute_reverse_complement(begin, end) {
     var start = begin;
 
     var begin_arr = begin.data;
@@ -99,7 +99,7 @@ function compute_reverse_complement (begin, end) {
     var endIndex = end.length - 1;
 
     while (begin != end || beginIndex < endIndex) {
-        var temp = getComplementChar(begin_arr[beginIndex]);
+        const temp = getComplementChar(begin_arr[beginIndex]);
         begin_arr[beginIndex++] = getComplementChar(end_arr[endIndex]);
         end_arr[endIndex--] = temp;
 
@@ -133,47 +133,47 @@ function compute_reverse_complement (begin, end) {
     return start;
 }
 
-function checkReverseComplement (start) {
-    for (var current = start; current != null; current = current.next) {
-        for (var i = 0; i < current.length; i++) {
-            var ch = current.data[i];
+function checkReverseComplement(start) {
+    for (let current = start; current != null; current = current.next) {
+        for (let i = 0; i < current.length; i++) {
+            const ch = current.data[i];
             switch (ch) {
-            case 'T':
-            case 'G':
-            case 'C':
-            case 'M':
-            case 'N':
-            case 'S':
-            case 'B':
-            case 'R':
-                Taint.assertTainted(ch);
-                break;
-            default:
-                Taint.assertNotTainted(ch);
-                break;
+                case 'T':
+                case 'G':
+                case 'C':
+                case 'M':
+                case 'N':
+                case 'S':
+                case 'B':
+                case 'R':
+                    Taint.assertTainted(ch);
+                    break;
+                default:
+                    Taint.assertNotTainted(ch);
+                    break;
             }
         }
     }
 }
 
-function peekNextChar () {
-    var charCode = ioObj.peekNextChar();
+function peekNextChar() {
+    const charCode = ioObj.peekNextChar();
     return String.fromCharCode(charCode);
 }
 
-function reverseComplement () {
+function reverseComplement() {
 
     ioObj.openInputFile();
     ioObj.openOutputFile();
 
     while (ioObj.canReadLine()) {
 
-        var line = ioObj.readLine();
+        let line = ioObj.readLine();
         ioObj.write(line);
         ioObj.write('\n');
 
-        var start = new chunk();
-        var end = start;
+        let start = new chunk();
+        let end = start;
         while (ioObj.canReadLine() && peekNextChar() != '>') {
             for (var lineNr = 0; lineNr < 1074 && ioObj.canReadLine() && peekNextChar() != '>'; lineNr++) {
 
@@ -206,7 +206,7 @@ function reverseComplement () {
         for (var current = start; current != null; current = current.next) {
             for (var i = 0; i < current.length; i++) {
                 var ch = current.data[i]
-                ch = Taint.removeTaint(ch)
+                ch = Taint.remove(ch)
                 ioObj.write(ch);
             }
             if (current.next != null) {
@@ -221,14 +221,17 @@ function reverseComplement () {
     ioObj.closeOutputFile();
 }
 
-function benchmark () {
+function benchmark() {
     reverseComplement();
     return 0;
 }
 
-function getExpectedResult () {
+function getExpectedResult() {
     return 0;
 }
+
+console.assert(typeof benchmark == 'function', "'benchmark' is not a function");
+console.assert(typeof benchmarkName == 'string', "'benchmarkName' is not defined or invalid");
 
 function main() {
     const benchmarkIO = Polyglot.import("benchmarkIO");
@@ -247,3 +250,4 @@ function main() {
 }
 
 main();
+

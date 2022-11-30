@@ -6,17 +6,17 @@
  * by Paul Hsieh
  */
 
-var benchmarkName = "fasta";
+const benchmarkName = "fasta";
 
-function writeFastaHeader (id, desc) {
+const Taint = Polyglot.import("taint");
+
+function writeFastaHeader(id, desc) {
     // printf(">%s %s\n", id, desc);
 }
 
-function writeFasta (str, from) {
-    const Taint = Polyglot.import("taint");
-
-    for (var i = from; i < str.length; i++) {
-        var ch = str[i];
+function writeFasta(str, from) {
+    for (let i = from; i < str.length; i++) {
+        const ch = str[i];
 
         if (ch == 'G') {
             Taint.assertTainted(ch);
@@ -51,7 +51,7 @@ function writeFasta (str, from) {
 
 var last = 42;
 
-function gen_random (max) {
+function gen_random(max) {
 
     const IM = 139968;
     const IA = 3877;
@@ -60,34 +60,33 @@ function gen_random (max) {
     return max * (last = (last * IA + IC) % IM) / IM;
 }
 
-function aminoacids () {
+function aminoacids() {
     this.c = '0';
     this.p = 0.0;
 }
 
 /* Weighted selection from alphabet */
 
-function makeCumulative (genelist, count) {
-    var cp = 0.0;
+function makeCumulative(genelist, count) {
+    let cp = 0.0;
 
-    for (var i = 0; i < count; i++) {
+    for (let i = 0; i < count; i++) {
         cp += genelist[i].p;
         genelist[i].p = cp;
     }
 }
 
-function selectRandom (genelist, count) {
-    var r = gen_random(1);
-    var i, lo, hi;
+function selectRandom(genelist, count) {
+    const r = gen_random(1);
 
     if (r < genelist[0].p)
         return genelist[0].c;
 
-    lo = 0;
-    hi = count - 1;
+    let lo = 0;
+    let hi = count - 1;
 
     while (hi > (lo + 1)) {
-        i = (hi + lo) / 2;
+        let i = (hi + lo) / 2;
         i = Math.floor(i);
         if (r < genelist[i].p)
             hi = i;
@@ -100,34 +99,33 @@ function selectRandom (genelist, count) {
 /* Generate and write FASTA format */
 
 
-function makeRandomFasta (id, desc, genelist, count, n) {
+function makeRandomFasta(id, desc, genelist, count, n) {
     const LINE_LENGTH = 60;
 
-    var todo = n;
-    var i, m;
+    let todo = n;
 
     writeFastaHeader(id, desc);
 
     for (; todo > 0; todo -= LINE_LENGTH) {
         var pick = [];
+        let m;
         if (todo < LINE_LENGTH)
             m = todo;
         else
             m = LINE_LENGTH;
-        for (i = 0; i < m; i++)
+        for (let i = 0; i < m; i++)
             pick[i] = selectRandom(genelist, count);
         pick[m] = '\0';
         writeFasta(pick, 0);
     }
 }
 
-function makeRepeatFasta (id, desc, s, n) {
+function makeRepeatFasta(id, desc, s, n) {
     const LINE_LENGTH = 60;
 
-    var todo = n,
-        k = 0,
-        kn = s.length;
-    var m;
+    let todo = n;
+    let k = 0;
+    const kn = s.length;
 
     var ss = [];
     for (var i = 0; i < kn; i++) {
@@ -137,6 +135,7 @@ function makeRepeatFasta (id, desc, s, n) {
     writeFastaHeader(id, desc);
 
     for (; todo > 0; todo -= LINE_LENGTH) {
+        let m;
         if (todo < LINE_LENGTH)
             m = todo;
         else
@@ -161,29 +160,29 @@ var iub;
 var homosapiens;
 var alu;
 
-function setupBaseData () {
+function setupBaseData() {
     const Taint = Polyglot.import("taint");
 
     homosapiens = [];
-    for (var i = 0; i < 4; i++) homosapiens[i] = new aminoacids();
+    for (let i = 0; i < 4; i++) homosapiens[i] = new aminoacids();
     homosapiens[0].c = 'a';
     homosapiens[0].p = 0.3029549426680;
     homosapiens[1].c = 'c';
     homosapiens[1].p = 0.1979883004921;
-    homosapiens[2].c = Taint.addTaint('g');
+    homosapiens[2].c = Taint.add('g');
     homosapiens[2].p = 0.1975473066391;
-    homosapiens[3].c = Taint.addTaint('t');
+    homosapiens[3].c = Taint.add('t');
     homosapiens[3].p = 0.3015094502008;
 
     iub = [];
-    for (var i = 0; i < 15; i++) iub[i] = new aminoacids();
+    for (let i = 0; i < 15; i++) iub[i] = new aminoacids();
     iub[0].c = 'a';
     iub[0].p = 0.27;
     iub[1].c = 'c';
     iub[1].p = 0.12;
-    iub[2].c = Taint.addTaint('g');
+    iub[2].c = Taint.add('g');
     iub[2].p = 0.12;
-    iub[3].c = Taint.addTaint('t');
+    iub[3].c = Taint.add('t');
     iub[3].p = 0.27;
     iub[4].c = 'B';
     iub[4].p = 0.02;
@@ -209,7 +208,7 @@ function setupBaseData () {
     iub[14].p = 0.02;
 
     const ALU_LENGTH = 287;
-    var alu_init =
+    const alu_init =
         "GGCCGGGCGCGGTGGCTCACGCCTGTAATCCCAGCACTTTGG" +
         "GAGGCCGAGGCGGGCGGATCACCTGAGGTCAGGAGTTCGAGA" +
         "CCAGCCTGGCCAACATGGTGAAACCCCGTCTCTACTAAAAAT" +
@@ -218,19 +217,19 @@ function setupBaseData () {
         "AGGCGGAGGTTGCAGTGAGCCGAGATCGCGCCACTGCACTCC" +
         "AGCCTGGGCGACAGAGCGAGACTCCGTCTCAAAAA";
     alu = [];
-    for (var i = 0; i < ALU_LENGTH; i++) {
-        var ch = alu_init[i];
+    for (let i = 0; i < ALU_LENGTH; i++) {
+        let ch = alu_init[i];
         if (ch == 'G') {
-            ch = Taint.addTaint('G');
+            ch = Taint.add('G');
         } else if (ch == 'T') {
-            ch = Taint.addTaint('T');
+            ch = Taint.add('T');
         }
         alu[i] = ch;
     }
 }
 
-function benchmark () {
-    var n = 1000000;
+function benchmark() {
+    const n = 1000000;
 
     setupBaseData();
 
@@ -244,16 +243,19 @@ function benchmark () {
     return 0;
 }
 
-function getExpectedResult () {
+function getExpectedResult() {
     return 0;
 }
 
-function main () {
-    var result = benchmark();
+function main() {
+    const result = benchmark();
     return result;
 }
 
-function setup (arg) {}
+function setup(arg) { }
+
+console.assert(typeof benchmark == 'function', "'benchmark' is not a function");
+console.assert(typeof benchmarkName == 'string', "'benchmarkName' is not defined or invalid");
 
 function main() {
     const benchmarkIO = Polyglot.import("benchmarkIO");
@@ -272,3 +274,4 @@ function main() {
 }
 
 main();
+

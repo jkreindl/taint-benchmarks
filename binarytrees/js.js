@@ -11,29 +11,30 @@
    *reset*
 */
 
-var benchmarkName = "binarytrees";
+const benchmarkName = "binarytrees";
 
-function shouldBeTainted (level) {
+const Taint = Polyglot.import("taint");
+
+function shouldBeTainted(level) {
     return (level & 0b11) == 0b11;
 }
 
-function treeNode () {
+function treeNode() {
     this.left = undefined;
     this.right = undefined;
     this.item = undefined;
 }
 
-function getItem (level) {
-    const Taint = Polyglot.import("taint");
-    var item = 1;
+function getItem(level) {
+    let item = 1;
     if (shouldBeTainted(level)) {
-        item = Taint.addTaint(item);
+        item = Taint.add(item);
     }
     return item;
 }
 
-function NewTreeNode (level, left, right) {
-    var node = new treeNode();
+function NewTreeNode(level, left, right) {
+    const node = new treeNode();
 
     node.left = left;
     node.right = right;
@@ -42,8 +43,8 @@ function NewTreeNode (level, left, right) {
     return node;
 } /* NewTreeNode() */
 
-function ItemCheck (tree) {
-    var result = 0;
+function ItemCheck(tree) {
+    let result = 0;
     result += tree.item;
     if (tree.left != undefined) {
         result += ItemCheck(tree.left);
@@ -52,8 +53,8 @@ function ItemCheck (tree) {
     return result;
 } /* ItemCheck() */
 
-function BottomUpTree (depth) {
-    var node = undefined;
+function BottomUpTree(depth) {
+    let node = undefined;
     if (depth > 0) {
         node = NewTreeNode(
             depth,
@@ -65,15 +66,13 @@ function BottomUpTree (depth) {
     return node;
 } /* BottomUpTree() */
 
-function DeleteTree (depth, tree) {
+function DeleteTree(depth, tree) {
     if (tree.left != undefined) {
         DeleteTree(depth - 1, tree.left);
         DeleteTree(depth - 1, tree.right);
     }
 
-    const Taint = Polyglot.import("taint");
-
-    var item = tree.item;
+    let item = tree.item;
 
     if (shouldBeTainted(depth)) {
         Taint.assertTainted(item);
@@ -83,46 +82,39 @@ function DeleteTree (depth, tree) {
     }
 } /* DeleteTree() */
 
-function benchmark () {
-    const Taint = Polyglot.import("taint");
+function benchmark() {
+    const N = 15;
+    const minDepth = 4;
 
-    var N, depth, minDepth, maxDepth, stretchDepth;
-    var stretchTree, longLivedTree, tempTree;
-
-    N = 15;
-
-    minDepth = 4;
-
+    let maxDepth;
     if ((minDepth + 2) > N)
         maxDepth = minDepth + 2;
     else
         maxDepth = N;
 
-    stretchDepth = maxDepth + 1;
+    const stretchDepth = maxDepth + 1;
 
-    var result = 0;
-    var check = 0;
+    let result = 0;
+    let check = 0;
 
-    stretchTree = BottomUpTree(stretchDepth);
+    const stretchTree = BottomUpTree(stretchDepth);
     check = ItemCheck(stretchTree);
     Taint.assertTainted(check);
     result += check;
 
     DeleteTree(stretchDepth, stretchTree);
 
-    longLivedTree = BottomUpTree(maxDepth);
+    const longLivedTree = BottomUpTree(maxDepth);
 
-    for (depth = minDepth; depth <= maxDepth; depth += 2) {
-        var i, iterations;
-
-        iterations = Math.pow(2, maxDepth - depth + minDepth);
+    for (let depth = minDepth; depth <= maxDepth; depth += 2) {
+        const iterations = Math.pow(2, maxDepth - depth + minDepth);
 
         check = 0;
 
-        for (i = 1; i <= iterations; i++) {
-            tempTree = BottomUpTree(depth);
+        for (let i = 1; i <= iterations; i++) {
+            let tempTree = BottomUpTree(depth);
 
-            var curCheck = ItemCheck(tempTree);
+            const curCheck = ItemCheck(tempTree);
 
             if (depth >= 0b11)
                 Taint.assertTainted(curCheck);
@@ -148,16 +140,19 @@ function benchmark () {
 
     DeleteTree(maxDepth, longLivedTree);
     Taint.assertTainted(result);
-    result = Taint.removeTaint(result);
+    result = Taint.remove(result);
 
     return result;
 } /* benchmark() */
 
-function getExpectedResult () {
+function getExpectedResult() {
     return 6444382;
 }
 
-function setup (arg) {}
+function setup(arg) { }
+
+console.assert(typeof benchmark == 'function', "'benchmark' is not a function");
+console.assert(typeof benchmarkName == 'string', "'benchmarkName' is not defined or invalid");
 
 function main() {
     const benchmarkIO = Polyglot.import("benchmarkIO");
@@ -176,3 +171,4 @@ function main() {
 }
 
 main();
+

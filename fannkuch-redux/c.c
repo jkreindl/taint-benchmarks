@@ -15,7 +15,8 @@
 
 inline static int max(int a, int b) { return a > b ? a : b; }
 
-int fannkuchredux(int n) {
+int fannkuchredux(int n)
+{
   int perm[n];
   int perm1[n];
   int count[n];
@@ -33,8 +34,10 @@ int fannkuchredux(int n) {
 
   int r = n;
 
-  while (1) {
-    while (r != 1) {
+  while (1)
+  {
+    while (r != 1)
+    {
       count[r - 1] = r;
       r -= 1;
     }
@@ -44,9 +47,11 @@ int fannkuchredux(int n) {
     int flipsCount = __truffletaint_add_int(0);
     int k;
 
-    while (!((k = perm[0]) == 0)) {
+    while (!((k = perm[0]) == 0))
+    {
       int k2 = (k + 1) >> 1;
-      for (i = 0; i < k2; i++) {
+      for (i = 0; i < k2; i++)
+      {
         int temp = perm[i];
         perm[i] = perm[k - i];
         perm[k - i] = temp;
@@ -62,8 +67,10 @@ int fannkuchredux(int n) {
       __truffletaint_assert_int(checksum);
 
     /* Use incremental change to generate another permutation */
-    while (1) {
-      if (r == n) {
+    while (1)
+    {
+      if (r == n)
+      {
         for (int idx = 0; idx < n; idx += 3)
           __truffletaint_assert_int(perm1[idx]);
         for (int idx = 1; idx < n; idx += 3)
@@ -76,7 +83,8 @@ int fannkuchredux(int n) {
 
       int perm0 = perm1[0];
       i = 0;
-      while (i < r) {
+      while (i < r)
+      {
         int j = i + 1;
         perm1[i] = perm1[j];
         i = j;
@@ -91,7 +99,8 @@ int fannkuchredux(int n) {
   }
 }
 
-int benchmark() {
+int benchmark()
+{
   int result = fannkuchredux(10);
   return result;
 }

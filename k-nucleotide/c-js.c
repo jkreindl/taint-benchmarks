@@ -16,17 +16,17 @@ const char *JS_LOGIC =
     "const Taint = Polyglot.import(\"taint\");\n"
     "\n"
     "function RefNum (num) {\n"
-    "    num = Taint.addTaint(num);\n"
+    "    num = Taint.add(num);\n"
     "    this.num = num;\n"
     "}\n"
     "\n"
     "function frequency (seq, length) {\n"
-    "    var freq = new Map(),\n"
-    "        n = seq.length - length + 1,\n"
-    "        key, cur, i = 0;\n"
-    "    for (; i < n; ++i) {\n"
-    "        key = seq.substr(i, length);\n"
-    "        cur = freq.get(key);\n"
+    "    let freq = new Map();\n"
+    "    let n = seq.length - length + 1;\n"
+    "    for (let i = 0; i < n; ++i) {\n"
+    "        let key = seq.substr(i, length);\n"
+    "        key = Taint.remove(key);\n"
+    "        const cur = freq.get(key);\n"
     "        cur === undefined ? freq.set(key, new RefNum(1)) : ++cur.num;\n"
     "    }\n"
     "    return freq;\n"
@@ -34,29 +34,26 @@ const char *JS_LOGIC =
     "\n"
     "function sort (seq, length) {\n"
     "    Taint.assertTainted(seq);\n"
-    "    var f = frequency(seq, length),\n"
-    "        keys = Array.from(f.keys()),\n"
-    "        n = seq.length - length + 1,\n"
-    "        res = \"\";\n"
-    "    keys.sort((a, b) => Taint.removeTaint"
-    "(f.get(b).num - f.get(a).num));\n"
-    "    for (var key of keys) {\n"
+    "    const f = frequency(seq, length);\n"
+    "    const keys = Array.from(f.keys());\n"
+    "    const n = seq.length - length + 1;\n"
+    "    let res = \"\";\n"
+    "    keys.sort((a, b) => Taint.remove(f.get(b).num - f.get(a).num));\n"
+    "    for (let key of keys) {\n"
+    "        key = Taint.remove(key);\n"
     "        const count = f.get(key).num * 100 * 1000;\n"
     "        const fraction = Math.floor(count / n);\n"
     "        Taint.assertTainted(fraction);\n"
-    "        res += key + ' ' + (Math.floor(fraction / 1000)) + \".\" + "
-    "(fraction % 1000).toString().padStart(3, \"0\") + '\\n';\n"
+    "        res += key + ' ' + (Math.floor(fraction / 1000)) + \".\" + (fraction % 1000).toString().padStart(3, \"0\") + '\\n';\n"
     "    }\n"
     "    res += '\\n';\n"
-    "    return Taint.removeTaint(res);\n"
+    "    return Taint.remove(res);\n"
     "}\n"
     "\n"
     "function find (seq, s) {\n"
     "    Taint.assertTainted(seq);\n"
     "    var f = frequency(seq, s.length);\n"
-    "    return (Taint.removeTaint"
-    "(f.get(s).num) || 0) + \"\\t\" + Taint.removeTaint"
-    "(s) + '\\n';\n"
+    "    return (Taint.remove(f.get(s).num) || 0) + \"\\t\" + Taint.remove(s) + '\\n';\n"
     "}\n"
     "\n"
     "({\n"
@@ -79,7 +76,8 @@ void *(*sort)(void *, const intnative_t);
 // desired_Length_For_Oligonucleotides and then save it to output.
 static void *generate_Frequencies_For_Desired_Length_Oligonucleotides(
     void *polynucleotide,
-    const intnative_t desired_Length_For_Oligonucleotides) {
+    const intnative_t desired_Length_For_Oligonucleotides)
+{
   void *res = sort(polynucleotide, desired_Length_For_Oligonucleotides);
   polyglot_invoke(ioObj, "write", res);
 }
@@ -91,7 +89,8 @@ void *(*find)(void *, void *);
 static void
 generate_Count_For_Oligonucleotide(void *polynucleotide,
                                    const intnative_t polynucleotide_Length,
-                                   const char *const oligonucleotide) {
+                                   const char *const oligonucleotide)
+{
   void *oligonucleotide_str = polyglot_from_string(oligonucleotide, "UTF-8");
   void *res = find(polynucleotide, oligonucleotide_str);
   polyglot_invoke(ioObj, "write", res);
@@ -99,16 +98,19 @@ generate_Count_For_Oligonucleotide(void *polynucleotide,
 
 #define INPUT_BUFFER_SIZE 4096
 
-static inline int skipFirstTwoPolynucleotides(char *buffer) {
+static inline int skipFirstTwoPolynucleotides(char *buffer)
+{
   uint64_t bytesRead;
-  do {
+  do
+  {
     void *tmp;
     BENCHMARK_IO_READ_LINE_CONST_BUFFER(ioObj, tmp, buffer, INPUT_BUFFER_SIZE,
                                         bytesRead);
   } while (bytesRead && memcmp(">THREE", buffer, sizeof(">THREE") - 1));
 }
 
-static inline int readNextLineOfPolynucleotideIntoBuffer(char *buffer) {
+static inline int readNextLineOfPolynucleotideIntoBuffer(char *buffer)
+{
   uint64_t bytesRead;
   void *tmp;
   BENCHMARK_IO_READ_LINE_CONST_BUFFER(ioObj, tmp, buffer, INPUT_BUFFER_SIZE,
@@ -116,13 +118,15 @@ static inline int readNextLineOfPolynucleotideIntoBuffer(char *buffer) {
   return bytesRead && buffer[0] != '>';
 }
 
-static inline char toUpperCase(char ch) {
+static inline char toUpperCase(char ch)
+{
   if ('a' <= ch && ch <= 'z')
     ch = ch - 'a' + 'A';
   return ch;
 }
 
-void knucleotide() {
+void knucleotide()
+{
   BENCHMARK_IO_OPEN_INPUT_FILE(ioObj);
 
   char buffer[INPUT_BUFFER_SIZE];
@@ -137,7 +141,8 @@ void knucleotide() {
   char *polynucleotide = malloc(polynucleotide_Capacity);
 
   // Start reading and encoding the third polynucleotide.
-  while (readNextLineOfPolynucleotideIntoBuffer(buffer)) {
+  while (readNextLineOfPolynucleotideIntoBuffer(buffer))
+  {
     for (intnative_t i = 0; buffer[i] != '\0'; i++)
       if (buffer[i] != '\n')
         polynucleotide[polynucleotide_Length++] =
@@ -174,14 +179,16 @@ void knucleotide() {
   BENCHMARK_IO_CLOSE_OUTPUT_FILE(ioObj);
 }
 
-int benchmark() {
+int benchmark()
+{
   knucleotide();
   return 0;
 }
 
 int getExpectedResult() { return 0; }
 
-void setup(void *arg) {
+void setup(void *arg)
+{
   ioObj = arg;
   void *jsModule = polyglot_eval("js", JS_LOGIC);
   find = polyglot_get_member(jsModule, "find");

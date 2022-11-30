@@ -8,40 +8,40 @@
    Ported, modified, and parallelized by Roman Pletnev
 */
 
-var benchmarkName = "k-nucleotide";
+const benchmarkName = "k-nucleotide";
 
 const Taint = Polyglot.import("taint");
 var ioObj;
 
-function setup (arg) {
+function setup(arg) {
     ioObj = arg;
 }
 
-function RefNum (num) {
-    num = Taint.addTaint(num);
-    this.num = num;
+function RefNum(num) {
+    this.num = Taint.add(num);
 }
 
-function frequency (seq, length) {
-    var freq = new Map(),
-        n = seq.length - length + 1,
-        key, cur, i = 0;
-    for (; i < n; ++i) {
-        key = seq.substr(i, length);
-        cur = freq.get(key);
+function frequency(seq, length) {
+    let freq = new Map();
+    let n = seq.length - length + 1;
+    for (let i = 0; i < n; ++i) {
+        let key = seq.substr(i, length);
+        key = Taint.remove(key);
+        const cur = freq.get(key);
         cur === undefined ? freq.set(key, new RefNum(1)) : ++cur.num;
     }
     return freq;
 }
 
-function sort (seq, length) {
+function sort(seq, length) {
     Taint.assertTainted(seq);
-    var f = frequency(seq, length),
-        keys = Array.from(f.keys()),
-        n = seq.length - length + 1,
-        res = "";
-    keys.sort((a, b) => Taint.removeTaint(f.get(b).num - f.get(a).num));
-    for (var key of keys) {
+    const f = frequency(seq, length);
+    const keys = Array.from(f.keys());
+    const n = seq.length - length + 1;
+    let res = "";
+    keys.sort((a, b) => Taint.remove(f.get(b).num - f.get(a).num));
+    for (let key of keys) {
+        key = Taint.remove(key);
         const count = f.get(key).num * 100 * 1000;
         const fraction = Math.floor(count / n);
         Taint.assertTainted(fraction);
@@ -51,13 +51,13 @@ function sort (seq, length) {
     return res;
 }
 
-function find (seq, s) {
+function find(seq, s) {
     Taint.assertTainted(seq);
-    var f = frequency(seq, s.length);
-    return (f.get(s).num || 0) + "\t" + Taint.removeTaint(s) + '\n';
+    const f = frequency(seq, s.length);
+    return (f.get(s).num || 0) + "\t" + Taint.remove(s) + '\n';
 }
 
-function readSequence () {
+function readSequence() {
     ioObj.openInputFile();
     let seq = "";
     let reading = false;
@@ -74,8 +74,8 @@ function readSequence () {
     return seq;
 }
 
-function computeResult (seq) {
-    seq = Taint.addTaint(seq);
+function computeResult(seq) {
+    seq = Taint.add(seq);
     let res = sort(seq, 1);
     res += sort(seq, 2);
     res += find(seq, "GGT");
@@ -84,26 +84,29 @@ function computeResult (seq) {
     res += find(seq, "GGTATTTTAATT");
     res += find(seq, "GGTATTTTAATTTATAGT");
     Taint.assertTainted(res);
-    res = Taint.removeTaint(res);
+    res = Taint.remove(res);
     return res;
 }
 
-function writeResult (res) {
+function writeResult(res) {
     ioObj.openOutputFile();
     ioObj.write(res);
     ioObj.closeOutputFile();
 }
 
-function benchmark () {
+function benchmark() {
     const seq = readSequence();
     const res = computeResult(seq);
     writeResult(res);
     return 0;
 }
 
-function getExpectedResult () {
+function getExpectedResult() {
     return 0;
 }
+
+console.assert(typeof benchmark == 'function', "'benchmark' is not a function");
+console.assert(typeof benchmarkName == 'string', "'benchmarkName' is not defined or invalid");
 
 function main() {
     const benchmarkIO = Polyglot.import("benchmarkIO");
@@ -122,3 +125,4 @@ function main() {
 }
 
 main();
+

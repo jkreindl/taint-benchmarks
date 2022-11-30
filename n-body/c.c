@@ -27,10 +27,10 @@ double *vy;
 double *vz;
 double *mass;
 
-#define GETTER_AND_SETTER(arr_name)                                            \
-                                                                               \
-  double get_##arr_name(int nBody) { return arr_name[nBody]; }                 \
-                                                                               \
+#define GETTER_AND_SETTER(arr_name)                            \
+                                                               \
+  double get_##arr_name(int nBody) { return arr_name[nBody]; } \
+                                                               \
   void set_##arr_name(int nBody, double value) { arr_name[nBody] = value; }
 
 GETTER_AND_SETTER(x)
@@ -47,7 +47,8 @@ GETTER_AND_SETTER(mass)
 #define URANUS 3
 #define NEPTUNE 4
 
-void init() {
+void init()
+{
   pi = 3.141592653589793;
   solar_mass = (4 * pi * pi);
   days_per_year = 365.24;
@@ -97,8 +98,10 @@ void init() {
   set_mass(NEPTUNE, 5.15138902046611451e-05 * solar_mass);
 }
 
-void tearDown() {
-  for (int i = 0; i < NBODIES; i++) {
+void tearDown()
+{
+  for (int i = 0; i < NBODIES; i++)
+  {
     x[i] = y[i] = z[i] = vx[i] = vy[i] = vz[i] = mass[i] = 0.0;
   }
 
@@ -111,12 +114,15 @@ void tearDown() {
   free(mass);
 }
 
-void advance() {
-  for (int i = 0; i < NBODIES; ++i) {
+void advance()
+{
+  for (int i = 0; i < NBODIES; ++i)
+  {
     double x1 = get_x(i);
     double y1 = get_y(i);
     double z1 = get_z(i);
-    for (int j = i + 1; j < NBODIES; ++j) {
+    for (int j = i + 1; j < NBODIES; ++j)
+    {
       double dx = x1 - get_x(j);
       double R = dx * dx;
       double dy = y1 - get_y(j);
@@ -134,20 +140,24 @@ void advance() {
     }
   }
 
-  for (int i = 0; i < NBODIES; ++i) {
+  for (int i = 0; i < NBODIES; ++i)
+  {
     set_x(i, get_x(i) + DT * get_vx(i));
     set_y(i, get_y(i) + DT * get_vy(i));
     set_z(i, get_z(i) + DT * get_vz(i));
   }
 }
 
-double energy() {
+double energy()
+{
   double e = 0.0;
-  for (int i = 0; i < NBODIES; ++i) {
+  for (int i = 0; i < NBODIES; ++i)
+  {
     e +=
         0.5 * get_mass(i) *
         (get_vx(i) * get_vx(i) + get_vy(i) * get_vy(i) + get_vz(i) * get_vz(i));
-    for (int j = i + 1; j < NBODIES; ++j) {
+    for (int j = i + 1; j < NBODIES; ++j)
+    {
       double dx = get_x(i) - get_x(j);
       double dy = get_y(i) - get_y(j);
       double dz = get_z(i) - get_z(j);
@@ -158,9 +168,11 @@ double energy() {
   return e;
 }
 
-void offset_momentum() {
+void offset_momentum()
+{
   double px = 0.0, py = 0.0, pz = 0.0;
-  for (int i = 0; i < NBODIES; ++i) {
+  for (int i = 0; i < NBODIES; ++i)
+  {
     px += get_vx(i) * get_mass(i);
     py += get_vy(i) * get_mass(i);
     pz += get_vz(i) * get_mass(i);
@@ -170,7 +182,8 @@ void offset_momentum() {
   set_vz(0, -pz / solar_mass);
 }
 
-double benchmark() {
+double benchmark()
+{
   init();
   offset_momentum();
 
@@ -180,7 +193,8 @@ double benchmark() {
   double result = energy();
   result = __truffletaint_remove_double(result);
 
-  for (int i = 0; i < NBODIES; i++) {
+  for (int i = 0; i < NBODIES; i++)
+  {
     __truffletaint_assert_double(get_x(i));
     __truffletaint_assert_double(get_y(i));
     __truffletaint_assert_double(get_z(i));

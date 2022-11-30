@@ -12,7 +12,8 @@
 
 #include <math.h>
 
-struct Body {
+struct Body
+{
   double x;
   double y;
   double z;
@@ -39,9 +40,8 @@ struct Body **bodies;
 
 void setup(void *arg) {}
 
-POLYGLOT_DECLARE_STRUCT(Body)
-
-void init() {
+void init()
+{
   pi = 3.141592653589793;
   solar_mass = (4 * pi * pi);
   days_per_year = 365.24;
@@ -88,16 +88,20 @@ void init() {
   bodies[NEPTUNE]->mass = 5.15138902046611451e-05 * solar_mass;
 }
 
-void tearDown() {
+void tearDown()
+{
   for (int i = 0; i < NBODIES; i++)
     free(bodies[i]);
   free(bodies);
 }
 
-void advance() {
-  for (int i = 0; i < NBODIES; ++i) {
+void advance()
+{
+  for (int i = 0; i < NBODIES; ++i)
+  {
     struct Body *body = bodies[i];
-    for (int j = i + 1; j < NBODIES; ++j) {
+    for (int j = i + 1; j < NBODIES; ++j)
+    {
       double dx = body->x - bodies[j]->x;
       double R = dx * dx;
       double dy = body->y - bodies[j]->y;
@@ -115,20 +119,24 @@ void advance() {
     }
   }
 
-  for (int i = 0; i < NBODIES; ++i) {
+  for (int i = 0; i < NBODIES; ++i)
+  {
     bodies[i]->x = bodies[i]->x + DT * bodies[i]->vx;
     bodies[i]->y = bodies[i]->y + DT * bodies[i]->vy;
     bodies[i]->z = bodies[i]->z + DT * bodies[i]->vz;
   }
 }
 
-double energy() {
+double energy()
+{
   double e = 0.0;
-  for (int i = 0; i < NBODIES; ++i) {
+  for (int i = 0; i < NBODIES; ++i)
+  {
     struct Body *body = bodies[i];
     e += 0.5 * body->mass *
          (body->vx * body->vx + body->vy * body->vy + body->vz * body->vz);
-    for (int j = i + 1; j < NBODIES; ++j) {
+    for (int j = i + 1; j < NBODIES; ++j)
+    {
       double dx = body->x - bodies[j]->x;
       double dy = body->y - bodies[j]->y;
       double dz = body->z - bodies[j]->z;
@@ -139,9 +147,11 @@ double energy() {
   return e;
 }
 
-void offset_momentum() {
+void offset_momentum()
+{
   double px = 0.0, py = 0.0, pz = 0.0;
-  for (int i = 0; i < NBODIES; ++i) {
+  for (int i = 0; i < NBODIES; ++i)
+  {
     px += bodies[i]->vx * bodies[i]->mass;
     py += bodies[i]->vy * bodies[i]->mass;
     pz += bodies[i]->vz * bodies[i]->mass;
@@ -151,7 +161,8 @@ void offset_momentum() {
   bodies[SUN]->vz = -pz / solar_mass;
 }
 
-double benchmark() {
+double benchmark()
+{
   init();
   offset_momentum();
 
@@ -161,7 +172,8 @@ double benchmark() {
   double result = energy();
   result = __truffletaint_remove_double(result);
 
-  for (int i = 0; i < NBODIES; i++) {
+  for (int i = 0; i < NBODIES; i++)
+  {
     __truffletaint_assert_double(bodies[i]->x);
     __truffletaint_assert_double(bodies[i]->y);
     __truffletaint_assert_double(bodies[i]->z);

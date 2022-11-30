@@ -16,29 +16,34 @@
 double (*eval_A)(int, int);
 // double eval_A(int i, int j) { return 1.0 / ((i + j) * (i + j + 1) / 2 + i +
 // 1); }
-#define eval_A_js_impl                                                         \
-  "(function eval_A(i, j) { return 1.0 / ((i + j) * (i + j + 1) / 2 + i + "    \
+#define eval_A_js_impl                                                      \
+  "(function eval_A(i, j) { return 1.0 / ((i + j) * (i + j + 1) / 2 + i + " \
   "1); })\n"
 
-void eval_A_times_u(int N, const double u[], double Au[]) {
+void eval_A_times_u(int N, const double u[], double Au[])
+{
   int i, j;
-  for (i = __truffletaint_add_int(0); i < N; i++) {
+  for (i = __truffletaint_add_int(0); i < N; i++)
+  {
     Au[i] = 0;
     for (j = 0; j < N; j++)
       Au[i] += eval_A(i, j) * u[j];
   }
 }
 
-void eval_At_times_u(int N, const double u[], double Au[]) {
+void eval_At_times_u(int N, const double u[], double Au[])
+{
   int i, j;
-  for (i = 0; i < N; i++) {
+  for (i = 0; i < N; i++)
+  {
     Au[i] = 0;
     for (j = 0; j < N; j++)
       Au[i] += eval_A(j, i) * u[j];
   }
 }
 
-void eval_AtA_times_u(int N, const double u[], double AtAu[]) {
+void eval_AtA_times_u(int N, const double u[], double AtAu[])
+{
   double v[N];
   eval_A_times_u(N, u, v);
   eval_At_times_u(N, v, AtAu);
@@ -46,17 +51,20 @@ void eval_AtA_times_u(int N, const double u[], double AtAu[]) {
 
 void setup(void *arg) { eval_A = polyglot_eval("js", eval_A_js_impl); }
 
-double spectralNorm(int N) {
+double spectralNorm(int N)
+{
   int i;
   double u[N], v[N], vBv, vv;
   for (i = 0; i < N; i++)
     u[i] = 1;
-  for (i = 0; i < 10; i++) {
+  for (i = 0; i < 10; i++)
+  {
     eval_AtA_times_u(N, u, v);
     eval_AtA_times_u(N, v, u);
   }
   vBv = vv = 0;
-  for (i = 0; i < N; i++) {
+  for (i = 0; i < N; i++)
+  {
     vBv += u[i] * v[i];
     vv += v[i] * v[i];
   }
@@ -69,7 +77,8 @@ double spectralNorm(int N) {
   return result;
 }
 
-double benchmark() {
+double benchmark()
+{
   double sum = 0;
   for (int i = 0; i < 10; i++)
     sum += spectralNorm(500);

@@ -57,7 +57,8 @@ const char *JS_ENERGY =
     "    return e;\n"
     "})\n";
 
-struct Body {
+struct Body
+{
   double x;
   double y;
   double z;
@@ -85,14 +86,16 @@ double days_per_year;
 
 struct Body *bodies;
 
-void setup(void *arg) {
+void setup(void *arg)
+{
   advance = polyglot_eval("js", JS_ADVANCE);
   energy = polyglot_eval("js", JS_ENERGY);
 }
 
 POLYGLOT_DECLARE_STRUCT(Body)
 
-void init() {
+void init()
+{
   pi = 3.141592653589793;
   solar_mass = (4 * pi * pi);
   days_per_year = 365.24;
@@ -138,9 +141,11 @@ void init() {
 
 void tearDown() { free(bodies); }
 
-void offset_momentum() {
+void offset_momentum()
+{
   double px = 0.0, py = 0.0, pz = 0.0;
-  for (int i = 0; i < NBODIES; ++i) {
+  for (int i = 0; i < NBODIES; ++i)
+  {
     px += bodies[i].vx * bodies[i].mass;
     py += bodies[i].vy * bodies[i].mass;
     pz += bodies[i].vz * bodies[i].mass;
@@ -150,7 +155,8 @@ void offset_momentum() {
   bodies[SUN].vz = -pz / solar_mass;
 }
 
-double benchmark() {
+double benchmark()
+{
   init();
   offset_momentum();
 
@@ -161,7 +167,8 @@ double benchmark() {
   double result = energy(polyglot_bodies);
   result = __truffletaint_remove_double(result);
 
-  for (int i = 0; i < NBODIES; i++) {
+  for (int i = 0; i < NBODIES; i++)
+  {
     __truffletaint_assert_double(bodies[i].x);
     __truffletaint_assert_double(bodies[i].y);
     __truffletaint_assert_double(bodies[i].z);

@@ -26,14 +26,11 @@ const char *JS_PIDIGITS =
     "        d3 = 0,\n"
     "        d4 = 0;\n"
     "\n"
-    "    let tmp1 = Taint.addTaint(0n), // mpz_init(tmp1)\n"
-    "        tmp2 = Taint.addTaint(0n), // mpz_init(tmp2)\n"
-    "        acc = Taint.addTaint"
-    "(0n), // mpz_init_set_ui(acc, 0)\n"
-    "        den = Taint.addTaint"
-    "(1n), // mpz_init_set_ui(den, 1)\n"
-    "        num = Taint.addTaint"
-    "(1n); // mpz_init_set_ui(num, 1)\n"
+    "    let tmp1 = Taint.add(0n), // mpz_init(tmp1)\n"
+    "        tmp2 = Taint.add(0n), // mpz_init(tmp2)\n"
+    "        acc = Taint.add(0n), // mpz_init_set_ui(acc, 0)\n"
+    "        den = Taint.add(1n), // mpz_init_set_ui(den, 1)\n"
+    "        num = Taint.add(1n); // mpz_init_set_ui(num, 1)\n"
     "\n"
     "    const chr_0 = \"0\".charCodeAt(0),\n"
     "          chr_t = \"\\t\".charCodeAt(0),\n"
@@ -106,14 +103,17 @@ const char *JS_PIDIGITS =
     "\n"
     "(pidigits)\n";
 
-class Buffer {
+class Buffer
+{
 private:
   char *data;
   size_t length;
 
-  int countDigits(int num) {
+  int countDigits(int num)
+  {
     int digits = 1;
-    while (num >= 10) {
+    while (num >= 10)
+    {
       digits++;
       num = num / 10;
     }
@@ -121,12 +121,14 @@ private:
   }
 
 public:
-  Buffer() {
+  Buffer()
+  {
     this->length = 0;
     this->data = nullptr;
   }
 
-  Buffer(size_t length_) {
+  Buffer(size_t length_)
+  {
     this->length = length_;
     this->data = (char *)calloc(length_, sizeof(char));
   }
@@ -137,23 +139,27 @@ public:
 
   void writeToNative(void *);
 
-  ~Buffer() {
+  ~Buffer()
+  {
     free(this->data);
     this->length = 0;
     this->data = nullptr;
   }
 };
 
-int Buffer::writeNumberAsString(int num, int offset) {
+int Buffer::writeNumberAsString(int num, int offset)
+{
   const int digits = countDigits(num);
-  for (int curOffset = offset + digits - 1; curOffset >= offset; curOffset--) {
+  for (int curOffset = offset + digits - 1; curOffset >= offset; curOffset--)
+  {
     data[curOffset] = '0' + num % 10;
     num = num / 10;
   }
   return offset + digits;
 }
 
-int Buffer::writeInt8(int ch, int offset) {
+int Buffer::writeInt8(int ch, int offset)
+{
   if (ch != (ch & 0xff))
     throw "Invalid range for character, must be signed 8-bit number";
 
@@ -161,10 +167,12 @@ int Buffer::writeInt8(int ch, int offset) {
   return offset + 1;
 }
 
-void Buffer::writeToNative(void *ioObj) {
+void Buffer::writeToNative(void *ioObj)
+{
   BENCHMARK_IO_OPEN_OUTPUT_FILE(ioObj);
 
-  for (int i = 0; i < this->length; ++i) {
+  for (int i = 0; i < this->length; ++i)
+  {
     char ch = __truffletaint_remove_char(this->data[i]);
     BENCHMARK_IO_WRITE_CHAR(ioObj, ch);
   }
@@ -178,12 +186,14 @@ void (*pidigits)(int, Buffer *);
 
 void *ioObj;
 
-extern "C" {
+extern "C"
+{
 
-void setup(void *args) {
-  ioObj = args;
-  pidigits = (void (*)(int, Buffer *))polyglot_eval("js", JS_PIDIGITS);
-}
+  void setup(void *args)
+  {
+    ioObj = args;
+    pidigits = (void (*)(int, Buffer *))polyglot_eval("js", JS_PIDIGITS);
+  }
 
 // bufSize = (12 + countDigits(n) + 1) * (n / 10);
 // for (let i = 10, length = 10 ** (Math.log10(n) >>> 0); i < length; i *= 10) {
@@ -191,14 +201,15 @@ void setup(void *args) {
 // }
 #define BUF_SIZE 4142
 
-int benchmark() {
-  Buffer *buf = new Buffer(BUF_SIZE);
-  pidigits(2500, (Buffer *)polyglot_from_Buffer(buf));
-  buf->writeToNative(ioObj);
-  delete buf;
+  int benchmark()
+  {
+    Buffer *buf = new Buffer(BUF_SIZE);
+    pidigits(2500, (Buffer *)polyglot_from_Buffer(buf));
+    buf->writeToNative(ioObj);
+    delete buf;
 
-  return 0;
-}
+    return 0;
+  }
 
-int getExpectedResult() { return 0; }
+  int getExpectedResult() { return 0; }
 }

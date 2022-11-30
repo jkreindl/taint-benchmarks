@@ -7,6 +7,7 @@
 
 #define BENCHMARK_NAME "reverse-complement"
 #define BENCHMARK_RESULT_TYPE 1
+#define NATIVE_INPUT_FILE "revcomp-input-100000.fasta"
 #include "../common.h"
 #include <cstring>
 
@@ -15,18 +16,20 @@
 
 void *ioObj = nullptr;
 
-char complement(char character) {
-#define SET_CCH(ch, isTainted)                                                 \
-  {                                                                            \
-    complementChar = ch;                                                       \
-    throwChar = isTainted;                                                     \
-    break;                                                                     \
+char complement(char character)
+{
+#define SET_CCH(ch, isTainted) \
+  {                            \
+    complementChar = ch;       \
+    throwChar = isTainted;     \
+    break;                     \
   }
 #define RETURN_COMPLEMENT_CHAR(ch) SET_CCH(ch, false)
 #define THROW_COMPLEMENT_CHAR(ch) SET_CCH(__truffletaint_add_char(ch), true)
   char complementChar;
   bool throwChar;
-  switch (character & 0x1f) {
+  switch (character & 0x1f)
+  {
   case 1:
     THROW_COMPLEMENT_CHAR('T');
   case 2:
@@ -65,28 +68,37 @@ char complement(char character) {
 #undef THROW_COMPLEMENT_CHAR
 #undef RETURN_COMPLEMENT_CHAR
 #undef SET_CCH
-  if (throwChar) {
+  if (throwChar)
+  {
     throw complementChar;
-  } else {
+  }
+  else
+  {
     return complementChar;
   }
 }
 
-char getComplementChar(char original) {
+char getComplementChar(char original)
+{
   char ch;
-  try {
+  try
+  {
     ch = complement(original);
     __truffletaint_assertnot_char(ch);
-  } catch (char taintedChar) {
+  }
+  catch (char taintedChar)
+  {
     ch = taintedChar;
     __truffletaint_assert_char(ch);
   }
   return ch;
 }
 
-struct chunk {
+struct chunk
+{
   chunk() : previous(0), next(0), length(0) {}
-  chunk(chunk *previous) : previous(previous), next(0), length(0) {
+  chunk(chunk *previous) : previous(previous), next(0), length(0)
+  {
     previous->next = this;
   }
   chunk *previous;
@@ -95,31 +107,39 @@ struct chunk {
   char data[CHUNK_SIZE];
 };
 
-chunk *compute_reverse_complement(chunk *begin, chunk *end) {
+chunk *compute_reverse_complement(chunk *begin, chunk *end)
+{
   chunk *start = begin;
   char *begin_char = begin->data;
   char *end_char = end->data + end->length - 1;
-  while (begin != end || begin_char < end_char) {
+  while (begin != end || begin_char < end_char)
+  {
     char temp = getComplementChar(*begin_char);
     *begin_char++ = getComplementChar(*end_char);
     *end_char-- = temp;
-    if (*begin_char == '\n') {
+    if (*begin_char == '\n')
+    {
       ++begin_char;
     }
-    if (*end_char == '\n') {
+    if (*end_char == '\n')
+    {
       --end_char;
     }
-    if (begin_char == begin->data + begin->length) {
+    if (begin_char == begin->data + begin->length)
+    {
       begin = begin->next;
       begin_char = begin->data;
-      if (*begin_char == '\n') {
+      if (*begin_char == '\n')
+      {
         ++begin_char;
       }
     }
-    if (end_char == end->data - 1) {
+    if (end_char == end->data - 1)
+    {
       end = end->previous;
       end_char = end->data + end->length - 1;
-      if (*end_char == '\n') {
+      if (*end_char == '\n')
+      {
         --end_char;
       }
     }
@@ -128,11 +148,15 @@ chunk *compute_reverse_complement(chunk *begin, chunk *end) {
   return start;
 }
 
-void checkReverseComplement(chunk *start) {
-  for (chunk *current = start; current; current = current->next) {
-    for (int i = 0; i < current->length; i++) {
+void checkReverseComplement(chunk *start)
+{
+  for (chunk *current = start; current; current = current->next)
+  {
+    for (int i = 0; i < current->length; i++)
+    {
       char ch = current->data[i];
-      switch (ch) {
+      switch (ch)
+      {
       case 'T':
       case 'G':
       case 'C':
@@ -151,7 +175,8 @@ void checkReverseComplement(chunk *start) {
   }
 }
 
-void reverseComplement() {
+void reverseComplement()
+{
 
   BENCHMARK_IO_OPEN_INPUT_FILE(ioObj);
   BENCHMARK_IO_OPEN_OUTPUT_FILE(ioObj);
@@ -162,7 +187,8 @@ void reverseComplement() {
   uint64_t bufSize = 0L;
   uint64_t bytesWritten = 0L;
 
-  while (BENCHMARK_IO_CAN_READ_LINE(ioObj)) {
+  while (BENCHMARK_IO_CAN_READ_LINE(ioObj))
+  {
 
     BENCHMARK_IO_READ_LINE(ioObj, temp, tempLen, buf, bufSize, bytesWritten)
     BENCHMARK_IO_WRITE(ioObj, buf, bytesWritten);
@@ -171,14 +197,17 @@ void reverseComplement() {
     chunk *start = new chunk();
     chunk *end = start;
     while (BENCHMARK_IO_CAN_READ_LINE(ioObj) &&
-           BENCHMARK_IO_PEEK(ioObj) != '>') {
+           BENCHMARK_IO_PEEK(ioObj) != '>')
+    {
       for (int line = 0; line < 1074 && BENCHMARK_IO_CAN_READ_LINE(ioObj) &&
                          BENCHMARK_IO_PEEK(ioObj) != '>';
-           ++line) {
+           ++line)
+      {
 
         BENCHMARK_IO_READ_LINE(ioObj, temp, tempLen, buf, bufSize, bytesWritten)
 
-        if (bytesWritten > MAX_LINE_LENGTH) {
+        if (bytesWritten > MAX_LINE_LENGTH)
+        {
           throw "Unexpected line length";
         }
 
@@ -188,7 +217,8 @@ void reverseComplement() {
       }
 
       if (BENCHMARK_IO_CAN_READ_LINE(ioObj) &&
-          BENCHMARK_IO_PEEK(ioObj) != '>') {
+          BENCHMARK_IO_PEEK(ioObj) != '>')
+      {
         end = new chunk(end);
       }
     }
@@ -198,7 +228,8 @@ void reverseComplement() {
 
     checkReverseComplement(start);
 
-    while (start) {
+    while (start)
+    {
       BENCHMARK_IO_WRITE(ioObj, start->data, start->length);
       chunk *last = start;
       start = start->next;
@@ -208,7 +239,8 @@ void reverseComplement() {
     BENCHMARK_IO_WRITE(ioObj, "\n", 1);
   }
 
-  if (buf) {
+  if (buf)
+  {
     free(buf);
   }
 
@@ -216,14 +248,16 @@ void reverseComplement() {
   BENCHMARK_IO_CLOSE_OUTPUT_FILE(ioObj);
 }
 
-extern "C" {
+extern "C"
+{
 
-void setup(void *args) { ioObj = args; }
+  void setup(void *args) { ioObj = args; }
 
-int benchmark() {
-  reverseComplement();
-  return 0;
-}
+  int benchmark()
+  {
+    reverseComplement();
+    return 0;
+  }
 
-int getExpectedResult() { return 0; }
+  int getExpectedResult() { return 0; }
 }

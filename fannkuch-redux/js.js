@@ -8,9 +8,9 @@
  *
  */
 
-var benchmarkName = "fannkuch-redux";
+const benchmarkName = "fannkuch-redux";
 
-function max (a, b) {
+function max(a, b) {
     if (a > b) {
         return a;
     } else {
@@ -18,25 +18,23 @@ function max (a, b) {
     }
 }
 
-function fannkuchredux (n) {
-    var perm = [];
-    var perm1 = [];
-    var count = [];
-    var maxFlipsCount = 0;
-    var permCount = 0;
-    var checksum = 0;
+function fannkuchredux(n) {
+    const perm = [];
+    const perm1 = [];
+    const count = [];
+    let maxFlipsCount = 0;
+    let permCount = 0;
+    let checksum = 0;
 
     const Taint = Polyglot.import("taint");
 
-    var i;
-
-    for (i = 0; i < n; i += 1)
+    for (let i = 0; i < n; i += 1)
         perm1[i] = i;
 
-    for (i = 0; i < n; i += 3)
-        perm1[i] = Taint.addTaint(perm1[i]);
+    for (let i = 0; i < n; i += 3)
+        perm1[i] = Taint.add(perm1[i]);
 
-    var r = n;
+    let r = n;
 
     while (true) {
         while (r != 1) {
@@ -44,10 +42,10 @@ function fannkuchredux (n) {
             r -= 1;
         }
 
-        for (i = 0; i < n; i += 1)
+        for (let i = 0; i < n; i += 1)
             perm[i] = perm1[i];
-        var flipsCount = Taint.addTaint(0);
-        var k;
+        let flipsCount = Taint.add(0);
+        let k;
 
         while (true) {
             k = perm[0];
@@ -55,9 +53,9 @@ function fannkuchredux (n) {
                 break;
             }
 
-            var k2 = (k + 1) >> 1;
-            for (i = 0; i < k2; i++) {
-                var temp = perm[i];
+            const k2 = (k + 1) >> 1;
+            for (let i = 0; i < k2; i++) {
+                const temp = perm[i];
                 perm[i] = perm[k - i];
                 perm[k - i] = temp;
             }
@@ -86,11 +84,11 @@ function fannkuchredux (n) {
                 for (var idx = 2; idx < n; idx += 3)
                     Taint.assertNotTainted(perm1[idx]);
 
-                return Taint.removeTaint(maxFlipsCount);
+                return Taint.remove(maxFlipsCount);
             }
 
-            var perm0 = perm1[0];
-            i = 0;
+            const perm0 = perm1[0];
+            let i = 0;
             while (i < r) {
                 var j = i + 1;
                 perm1[i] = perm1[j];
@@ -113,16 +111,19 @@ function fannkuchredux (n) {
     return 0;
 }*/
 
-function benchmark () {
-    var result = fannkuchredux(10);
+function benchmark() {
+    const result = fannkuchredux(10);
     return result;
 }
 
-function getExpectedResult () {
+function getExpectedResult() {
     return 38;
 }
 
-function setup (arg) {}
+function setup(arg) { }
+
+console.assert(typeof benchmark == 'function', "'benchmark' is not a function");
+console.assert(typeof benchmarkName == 'string', "'benchmarkName' is not defined or invalid");
 
 function main() {
     const benchmarkIO = Polyglot.import("benchmarkIO");
@@ -141,3 +142,4 @@ function main() {
 }
 
 main();
+

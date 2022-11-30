@@ -6,15 +6,15 @@
 // contributed by Ian Osgood
 // modified for Node.js by Isaac Gouy
 
-var benchmarkName = "spectral-norm";
+const benchmarkName = "spectral-norm";
 
-function A (i, j) {
+function A(i, j) {
     return 1 / ((i + j) * (i + j + 1) / 2 + i + 1);
 }
 
-function Au (u, v) {
+function Au(u, v) {
     var Taint = Polyglot.import("taint");
-    for (var i = Taint.addTaint(0); i < u.length; ++i) {
+    for (var i = Taint.add(0); i < u.length; ++i) {
         var t = 0;
         for (var j = 0; j < u.length; ++j)
             t += A(i, j) * u[j];
@@ -22,7 +22,7 @@ function Au (u, v) {
     }
 }
 
-function Atu (u, v) {
+function Atu(u, v) {
     for (var i = 0; i < u.length; ++i) {
         var t = 0;
         for (var j = 0; j < u.length; ++j)
@@ -31,12 +31,12 @@ function Atu (u, v) {
     }
 }
 
-function AtAu (u, v, w) {
+function AtAu(u, v, w) {
     Au(u, w);
     Atu(w, v);
 }
 
-function spectralnorm (n) {
+function spectralnorm(n) {
     var i, u = [],
         v = [],
         w = [],
@@ -59,12 +59,12 @@ function spectralnorm (n) {
 
     var Taint = Polyglot.import("taint");
     Taint.assertTainted(result);
-    result = Taint.removeTaint(result);
+    result = Taint.remove(result);
 
     return result;
 }
 
-function benchmark () {
+function benchmark() {
     var sum = 0;
     for (var i = 0; i < 10; i++) {
         sum += spectralnorm(500);
@@ -72,11 +72,14 @@ function benchmark () {
     return sum;
 }
 
-function getExpectedResult () {
+function getExpectedResult() {
     return 12864590031.750621;
 }
 
-function setup (arg) {}
+function setup(arg) { }
+
+console.assert(typeof benchmark == 'function', "'benchmark' is not a function");
+console.assert(typeof benchmarkName == 'string', "'benchmarkName' is not defined or invalid");
 
 function main() {
     const benchmarkIO = Polyglot.import("benchmarkIO");
@@ -95,3 +98,4 @@ function main() {
 }
 
 main();
+
